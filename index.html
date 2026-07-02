@@ -28,6 +28,8 @@
         
         /* Phong cách cho ô tìm kiếm số điện thoại ở trên cùng */
         .search-box-container {
+ width: 30%;
+
             padding: 4px;
             background-color: #f1f5f9;
             margin-bottom: 4px;
@@ -122,7 +124,6 @@
 
 <script>
 // --- 1. KHAI BÁO DANH SÁCH HỌC SINH TẠI ĐÂY ---
-// Bạn có thể dễ dàng thêm, sửa, xóa học sinh trong mảng này
 const students = [
     { name: "Nguyễn Văn A", phone: "0901234567" },
     { name: "Trần Thị B", phone: "0912345678" },
@@ -143,20 +144,30 @@ const noteOptions = [
 // Hàm khởi tạo và hiển thị danh sách học sinh ra bảng HTML
 function initStudentList() {
     const tbody = document.getElementById('student-list');
-    tbody.innerHTML = ""; // Xóa dữ liệu cũ nếu có
+    tbody.innerHTML = ""; 
+
+    // Đọc dữ liệu ghi chú đã lưu từ localStorage (nếu có)
+    const savedNotes = JSON.parse(localStorage.getItem('studentNotes')) || {};
 
     students.forEach((student, index) => {
-        // Tạo thẻ tr cho từng học sinh
         const row = document.createElement('tr');
         row.className = "student-row";
 
-        // Tạo chuỗi HTML cho danh sách lựa chọn ghi chú (dropdown)
+        // Lấy lại giá trị ghi chú đã lưu trước đó của học sinh (dựa theo số điện thoại làm ID)
+        const savedValue = savedNotes[student.phone] || "";
+
+        // Kiểm tra xem nếu ghi chú cũ là 'nghi' thì tự động thêm màu đỏ luôn
+        if (savedValue === 'nghi') {
+            row.classList.add('highlight-red');
+        }
+
+        // Tạo danh sách lựa chọn ghi chú, đồng thời đặt thuộc tính 'selected' cho ghi chú cũ
         let optionsHTML = "";
         noteOptions.forEach(opt => {
-            optionsHTML += `<option value="${opt.value}">${opt.text}</option>`;
+            const isSelected = opt.value === savedValue ? "selected" : "";
+            optionsHTML += `<option value="${opt.value}" ${isSelected}>${opt.text}</option>`;
         });
 
-        // Đổ cấu trúc cột vào dòng
         row.innerHTML = `
             <td class="text-center">${index + 1}</td>
             <td class="student-name">${student.name}</td>
@@ -164,7 +175,7 @@ function initStudentList() {
                 <a href="tel:${student.phone}" class="btn-call" data-phone="${student.phone}">📞 ${student.phone}</a>
             </td>
             <td>
-                <select class="select-note" onchange="checkNote(this)">
+                <select class="select-note" data-phone="${student.phone}" onchange="checkNote(this)">
                     ${optionsHTML}
                 </select>
             </td>
@@ -192,14 +203,37 @@ function filterPhone() {
     });
 }
 
-// Hàm kiểm tra ghi chú để đổi màu nền đỏ nếu nghỉ học
+// Hàm xử lý khi thay đổi ghi chú: đổi màu và lưu vào localStorage
 function checkNote(selectElement) {
-    var row = selectElement.closest('tr');
+    const row = selectElement.closest('tr');
+    
+    // 1. Xử lý đổi màu nền đỏ
     if (selectElement.value === 'nghi') {
         row.classList.add('highlight-red');
     } else {
         row.classList.remove('highlight-red');
     }
+
+    // 2. Tiến hành lưu vào localStorage
+    saveAllNotes();
+}
+
+// Hàm quét toàn bộ bảng và lưu trạng thái ghi chú hiện tại
+function saveAllNotes() {
+    const savedNotes = {};
+    const dropdowns = document.querySelectorAll('.select-note');
+    
+    dropdowns.forEach(select => {
+        const phone = select.getAttribute('data-phone');
+        const value = select.value;
+        // Chỉ lưu những học sinh có chọn ghi chú (khác trống)
+        if (value) {
+            savedNotes[phone] = value;
+        }
+    });
+
+    // Lưu chuỗi JSON vào localStorage với key là 'studentNotes'
+    localStorage.setItem('studentNotes', JSON.stringify(savedNotes));
 }
 
 // Chạy hàm hiển thị danh sách khi trang tải xong
