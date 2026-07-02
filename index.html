@@ -26,17 +26,17 @@
             color: #1a365d;
         }
         
-        /* Phong cách cho ô tìm kiếm số điện thoại ở trên cùng */
+        /* Cải tiến bộ khung chứa các ô tìm kiếm nằm ngang */
         .search-box-container {
- width: 30%;
-
+            display: flex;
+            gap: 4px;
             padding: 4px;
             background-color: #f1f5f9;
             margin-bottom: 4px;
             border-bottom: 1px solid #cbd5e1;
         }
         .search-input {
-            width: 100%;
+            flex: 1; /* Chia đều không gian 50/50 cho 2 ô nhập */
             box-sizing: border-box;
             padding: 6px;
             font-size: 12px;
@@ -106,7 +106,8 @@
     <h3>Danh Sách Lớp</h3>
     
     <div class="search-box-container">
-        <input type="tel" id="phoneSearch" class="search-input" placeholder="Nhập số điện thoại (VD: 6 số cuối) để tìm..." onkeyup="filterPhone()">
+        <input type="text" id="nameSearch" class="search-input" placeholder="Tìm theo tên học sinh..." onkeyup="filterStudents()">
+        <input type="tel" id="phoneSearch" class="search-input" placeholder="Tìm theo số điện thoại..." onkeyup="filterStudents()">
     </div>
 
     <table>
@@ -123,6 +124,7 @@
 </div>
 
 <script>
+
 // --- 1. KHAI BÁO DANH SÁCH HỌC SINH TẠI ĐÂY ---
 const students = [
     { name: "Nguyễn Giản Long Vũ", phone: "0989882688" },
@@ -3324,13 +3326,15 @@ const students = [
     { name: "Đỗ Quỳnh Trang", phone: "0389500306" }
 ];
 
+
+
 // Menu ghi chú dùng chung
 const noteOptions = [
     { value: "", text: "-- Chọn --" },
     { value: "nghi", text: "Nghỉ hết tháng 7" },
-    { value: "lop-truong", text: "Lớp trưởng" },
-    { value: "di-hoc", text: "Đi học đầy đủ" },
-    { value: "chu-y", text: "Cần chú ý" }
+    { value: "lop-truong", text: "Không nghe máy" },
+    { value: "di-hoc", text: "Nghỉ hôm nay" },
+    { value: "chu-y", text: "Xin nghỉ hẳn" }
 ];
 
 // Hàm khởi tạo và hiển thị danh sách học sinh ra bảng HTML
@@ -3338,22 +3342,18 @@ function initStudentList() {
     const tbody = document.getElementById('student-list');
     tbody.innerHTML = ""; 
 
-    // Đọc dữ liệu ghi chú đã lưu từ localStorage (nếu có)
     const savedNotes = JSON.parse(localStorage.getItem('studentNotes')) || {};
 
     students.forEach((student, index) => {
         const row = document.createElement('tr');
         row.className = "student-row";
 
-        // Lấy lại giá trị ghi chú đã lưu trước đó của học sinh (dựa theo số điện thoại làm ID)
         const savedValue = savedNotes[student.phone] || "";
 
-        // Kiểm tra xem nếu ghi chú cũ là 'nghi' thì tự động thêm màu đỏ luôn
         if (savedValue === 'nghi') {
             row.classList.add('highlight-red');
         }
 
-        // Tạo danh sách lựa chọn ghi chú, đồng thời đặt thuộc tính 'selected' cho ghi chú cũ
         let optionsHTML = "";
         noteOptions.forEach(opt => {
             const isSelected = opt.value === savedValue ? "selected" : "";
@@ -3377,20 +3377,33 @@ function initStudentList() {
     });
 }
 
-// Hàm lọc tìm kiếm số điện thoại đuôi
-function filterPhone() {
-    const keyword = document.getElementById('phoneSearch').value.trim();
+// Hàm chuẩn hóa chuỗi: chuyển chữ có dấu thành không dấu để tìm kiếm chính xác hơn
+function removeVietnameseTones(str) {
+    return str.normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/đ/g, "d").replace(/Đ/g, "d")
+              .toLowerCase();
+}
+
+// HÀM LỌC TÌM KIẾM ĐÃ ĐƯỢC GỘP CHUNG (TÌM THEO CẢ TÊN VÀ SỐ)
+function filterStudents() {
+    const nameKeyword = removeVietnameseTones(document.getElementById('nameSearch').value.trim());
+    const phoneKeyword = document.getElementById('phoneSearch').value.trim();
     const rows = document.querySelectorAll('.student-row');
 
     rows.forEach(row => {
+        const nameText = removeVietnameseTones(row.querySelector('.student-name').textContent);
         const phoneAnchor = row.querySelector('.btn-call');
-        if (phoneAnchor) {
-            const phoneNumber = phoneAnchor.getAttribute('data-phone');
-            if (phoneNumber.includes(keyword)) {
-                row.style.display = ""; 
-            } else {
-                row.style.display = "none"; 
-            }
+        const phoneText = phoneAnchor ? phoneAnchor.getAttribute('data-phone') : "";
+
+        // Kiểm tra điều kiện: dòng phải khớp cả từ khóa tên VÀ từ khóa số điện thoại
+        const matchesName = nameText.includes(nameKeyword);
+        const matchesPhone = phoneText.includes(phoneKeyword);
+
+        if (matchesName && matchesPhone) {
+            row.style.display = ""; 
+        } else {
+            row.style.display = "none"; 
         }
     });
 }
@@ -3399,14 +3412,12 @@ function filterPhone() {
 function checkNote(selectElement) {
     const row = selectElement.closest('tr');
     
-    // 1. Xử lý đổi màu nền đỏ
     if (selectElement.value === 'nghi') {
         row.classList.add('highlight-red');
     } else {
         row.classList.remove('highlight-red');
     }
 
-    // 2. Tiến hành lưu vào localStorage
     saveAllNotes();
 }
 
@@ -3418,17 +3429,14 @@ function saveAllNotes() {
     dropdowns.forEach(select => {
         const phone = select.getAttribute('data-phone');
         const value = select.value;
-        // Chỉ lưu những học sinh có chọn ghi chú (khác trống)
         if (value) {
             savedNotes[phone] = value;
         }
     });
 
-    // Lưu chuỗi JSON vào localStorage với key là 'studentNotes'
     localStorage.setItem('studentNotes', JSON.stringify(savedNotes));
 }
 
-// Chạy hàm hiển thị danh sách khi trang tải xong
 window.onload = initStudentList;
 </script>
 
