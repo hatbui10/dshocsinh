@@ -32,10 +32,15 @@
             border-radius: 6px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             display: flex;
+            flex-direction: column;
             gap: 4px;
         }
-        .search-input {
-            width: 50%;
+        .filter-row {
+            display: flex;
+            gap: 4px;
+            width: 100%;
+        }
+        .search-input, .select-filter {
             box-sizing: border-box;
             padding: 8px;
             font-size: 12px;
@@ -43,8 +48,76 @@
             border-radius: 4px;
             outline: none;
         }
-        .search-input:focus { border-color: #3b82f6; }
+        .search-input { width: 50%; }
+        .select-filter { width: 100%; font-weight: bold; color: #1e293b; background-color: #f8fafc;}
+        .search-input:focus, .select-filter:focus { border-color: #3b82f6; }
 
+        /* Bảng thống kê sĩ số và danh sách vắng */
+        .summary-container {
+            background-color: #fff;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: none;
+        }
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .summary-title { font-weight: bold; color: #1e293b; font-size: 12px;}
+        
+        /* Nút Copy danh sách */
+        .btn-copy {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-copy:active { background-color: #4338ca; }
+        
+        .stats-grid { display: flex; gap: 6px; margin-bottom: 6px; }
+        .stat-box { flex: 1; padding: 6px; border-radius: 4px; text-align: center; font-weight: bold; }
+        .stat-total { background-color: #f1f5f9; color: #475569; }
+        .stat-present { background-color: #dcfce7; color: #15803d; }
+        .stat-absent { background-color: #fee2e2; color: #b91c1c; }
+        
+        .absent-list-box {
+            background-color: #fff5f5;
+            border: 1px dashed #fca5a5;
+            padding: 6px;
+            border-radius: 4px;
+        }
+        .absent-list-box div { font-weight: bold; color: #991b1b; margin-bottom: 4px; }
+        .absent-item {
+            margin: 4px 0;
+            padding: 4px 6px;
+            background-color: #fee2e2;
+            border-left: 3px solid #dc2626;
+            border-radius: 0 4px 4px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .absent-name { font-weight: 600; color: #991b1b; }
+        .absent-note { 
+            font-size: 11px; 
+            background-color: #fca5a5; 
+            color: #7f1d1d; 
+            padding: 1px 5px; 
+            border-radius: 3px;
+            font-weight: normal;
+        }
+        .no-absent { color: #22c55e; font-style: italic; font-size: 11px; }
+
+        /* Thẻ học sinh */
         .student-card {
             background: #fff;
             margin-bottom: 6px;
@@ -53,9 +126,9 @@
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
             box-sizing: border-box;
-            display: none; /* Mặc định ẩn tất cả khi mới mở trang */
+            display: none;
         }
-        .card-row { margin-bottom: 5px; }
+        .card-row { margin-bottom: 5px; display: flex; gap: 4px; align-items: center; }
         .card-row:last-child { margin-bottom: 0; }
         .student-name { font-size: 13px; font-weight: 600; color: #1e293b; }
         
@@ -71,6 +144,7 @@
         }
         .btn-call {
             display: block;
+            flex: 1;
             background-color: #22c55e;
             color: white;
             text-decoration: none;
@@ -82,25 +156,80 @@
             box-sizing: border-box;
         }
         .btn-call:active { background-color: #16a34a; }
-        
-        .btn-no-phone {
-            background-color: #cbd5e1;
+        .btn-no-phone { background-color: #cbd5e1; color: #64748b; pointer-events: none; }
+
+        /* Nút Đi học / Vắng */
+        .btn-status {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            background-color: #f8fafc;
             color: #64748b;
-            pointer-events: none;
+        }
+        .btn-status.active-present {
+            background-color: #2563eb !important;
+            color: white !important;
+            border-color: #2563eb;
+        }
+        .btn-status.active-absent {
+            background-color: #dc2626 !important;
+            color: white !important;
+            border-color: #dc2626;
         }
 
         .highlight-red { background-color: #fee2e2 !important; border-color: #fca5a5 !important; }
         .highlight-red .student-name { color: #991b1b; }
+        
+        .badge-class {
+            font-size: 10px;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: auto;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h3>Danh Sách Lớp</h3>
+    <h3>Quản Lý Lớp Học</h3>
     
     <div class="filter-container">
-        <input type="text" id="nameSearch" class="search-input" placeholder="Tìm theo tên học sinh..." onkeyup="filterStudents()">
-        <input type="tel" id="phoneSearch" class="search-input" placeholder="Tìm theo số ĐT..." onkeyup="filterStudents()">
+        <div class="filter-row">
+            <select id="classFilter" class="select-filter" onchange="filterStudents()">
+                <option value="">-- Chọn lớp hiển thị sĩ số & danh sách --</option>
+                <option value="SKY-KID">Lớp SKY-KID</option>
+                <option value="10A1">Lớp 10A1</option>
+                <option value="11B2">Lớp 11B2</option>
+            </select>
+        </div>
+        <div class="filter-row">
+            <input type="text" id="nameSearch" class="search-input" placeholder="Tìm tên..." onkeyup="filterStudents()">
+            <input type="tel" id="phoneSearch" class="search-input" placeholder="Tìm ĐT..." onkeyup="filterStudents()">
+        </div>
+    </div>
+
+    <div id="summaryArea" class="summary-container">
+        <div class="summary-header">
+            <div class="summary-title" id="summaryClassName">Thống kê lớp: </div>
+            <button type="button" class="btn-copy" id="btnCopy" onclick="copyAbsentList()">📋 Copy danh sách vắng</button>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-box stat-total" id="txtTotal">Sĩ số: 0</div>
+            <div class="stat-box stat-present" id="txtPresent">Đi học: 0</div>
+            <div class="stat-box stat-absent" id="txtAbsent">Vắng: 0</div>
+        </div>
+        <div class="absent-list-box">
+            <div>Danh sách vắng kèm ghi chú:</div>
+            <div id="absentNamesContainer"></div>
+        </div>
     </div>
 
     <div id="student-list"></div>
@@ -108,39 +237,31 @@
 
 <script>
 const dataHocSinh = [
-    { id: "hs_SKY-KID_01", ten: "Nguyễn An Nhiên (Bơ)", sdt: "0396963955" },
-    { id: "hs_SKY-KID_02", ten: "Nguyễn Trung Đức (Bon)", sdt: "0339804981" },
-    { id: "hs_SKY-KID_03", ten: "Đặng Đình Bách", sdt: "0904511462" },
-    { id: "hs_SKY-KID_04", ten: "Lâm Duy Anh", sdt: "0902239258" },
-    { id: "hs_SKY-KID_05", ten: "Vũ Nguyễn Hải Anh 23/11/20", sdt: "0336076895" },
-    { id: "hs_SKY-KID_06", ten: "Lan Anh em Tuấn Anh B", sdt: "KhôngcóSĐT" },
-    { id: "hs_SKY-KID_07", ten: "Đặng Khánh Ngân", sdt: "0942093566" },
-    { id: "hs_SKY-KID_08", ten: "Trần Lê Tuệ Linh", sdt: "0988742202" },
-    { id: "hs_SKY-KID_09", ten: "Nguyễn Trâm Anh", sdt: "0919403848" },
-    { id: "hs_SKY-KID_10", ten: "Nguyễn Tú Anh", sdt: "0919403848" },
-    { id: "hs_SKY-KID_11", ten: "Nguyễn Hà My", sdt: "0943681990" },
-    { id: "hs_SKY-KID_12", ten: "Hoàng Ngọc Phương Linh", sdt: "0912731673" }
-];
-
-const classOptions = [
-    { value: "", text: "-- Chọn lớp học --" },
-    { value: "SKY-KID", text: "Lớp SKY-KID" },
-    { value: "10A1", text: "Lớp 10A1" },
-    { value: "11B2", text: "Lớp 11B2" }
+    { id: "hs_SKY-KID_01", ten: "Nguyễn An Nhiên (Bơ)", sdt: "0396963955", lop: "SKY-KID" },
+    { id: "hs_SKY-KID_02", ten: "Nguyễn Trung Đức (Bon)", sdt: "0339804981", lop: "SKY-KID" },
+    { id: "hs_SKY-KID_03", ten: "Đặng Đình Bách", sdt: "0904511462", lop: "SKY-KID" },
+    { id: "hs_SKY-KID_04", ten: "Lâm Duy Anh", sdt: "0902239258", lop: "10A1" },
+    { id: "hs_SKY-KID_05", ten: "Vũ Nguyễn Hải Anh 23/11/20", sdt: "0336076895", lop: "10A1" },
+    { id: "hs_SKY-KID_06", ten: "Lan Anh em Tuấn Anh B", sdt: "KhôngcóSĐT", lop: "10A1" },
+    { id: "hs_SKY-KID_07", ten: "Đặng Khánh Ngân", sdt: "0942093566", lop: "11B2" },
+    { id: "hs_SKY-KID_08", ten: "Trần Lê Tuệ Linh", sdt: "0988742202", lop: "11B2" },
+    { id: "hs_SKY-KID_09", ten: "Nguyễn Trâm Anh", sdt: "0919403848", lop: "11B2" },
+    { id: "hs_SKY-KID_10", ten: "Nguyễn Tú Anh", sdt: "0919403848", lop: "SKY-KID" },
+    { id: "hs_SKY-KID_11", ten: "Nguyễn Hà My", sdt: "0943681990", lop: "10A1" },
+    { id: "hs_SKY-KID_12", ten: "Hoàng Ngọc Phương Linh", sdt: "0912731673", lop: "11B2" }
 ];
 
 const noteOptions = [
     { value: "", text: "-- Chọn ghi chú trạng thái --" },
-    { value: "nghi", text: "Nghỉ hết tháng 7" },
-    { value: "lop-truong", text: "Lớp trưởng" },
-    { value: "di-hoc", text: "Đi học đầy đủ" },
-    { value: "chu-y", text: "Cần chú ý đặc biệt" }
+    { value: "Nghỉ có phép", text: "Nghỉ có phép" },
+    { value: "Nghỉ không phép", text: "Nghỉ không phép" },
+    { value: "Nghỉ ốm", text: "Nghỉ ốm" },
+    { value: "Lớp trưởng", text: "Lớp trưởng" },
+    { value: "Cần chú ý đặc biệt", text: "Cần chú ý đặc biệt" }
 ];
 
-// Hàm phụ để tự động thêm dấu cách ngăn cách số điện thoại (Ví dụ: 0396 963 955)
 function formatPhoneNumber(phoneStr) {
     if (!phoneStr || phoneStr.length < 10) return phoneStr;
-    // Chia chuỗi số thành định dạng: 4 số đầu - 3 số giữa - 3 số cuối
     return phoneStr.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
 }
 
@@ -153,31 +274,36 @@ function renderStudents() {
 
     dataHocSinh.forEach(student => {
         const storageId = student.id; 
-        const saved = localData[storageId] || { class: "", note: "" };
+        const saved = localData[storageId] || { status: "dihoc", note: "" };
 
         const card = document.createElement('div');
         card.className = "student-card";
         card.setAttribute('data-id', storageId);
+        card.setAttribute('data-lop', student.lop);
 
         let isNoPhone = student.sdt.includes("KhôngcóSĐT") || student.sdt === "";
-        
-        // ĐÃ CẬP NHẬT: Thêm hàm formatPhoneNumber(student.sdt) để hiển thị có dấu cách
         let buttonHTML = isNoPhone 
-            ? `<span class="btn-call btn-no-phone">🚫 Không có số điện thoại</span>`
+            ? `<span class="btn-call btn-no-phone">🚫 Không số</span>`
             : `<a href="tel:${student.sdt}" class="btn-call" data-phone="${student.sdt}">📞 Gọi: ${formatPhoneNumber(student.sdt)}</a>`;
 
+        const isAbsent = saved.status === "vang";
+
         let cardHTML = `
-            <div class="card-row student-name" data-name="${student.ten}">${count}. ${student.ten}</div>
             <div class="card-row">
-                <select class="select-box select-class" onchange="saveData('${storageId}', 'class', this.value)">
-                    ${classOptions.map(opt => `<option value="${opt.value}" ${opt.value === saved.class ? 'selected' : ''}>${opt.text}</option>`).join('')}
-                </select>
+                <span class="student-name" data-name="${student.ten}">${count}. ${student.ten}</span>
+                <span class="badge-class">${student.lop}</span>
             </div>
+            
+            <div class="card-row">
+                <button type="button" class="btn-status btn-present ${!isAbsent ? 'active-present' : ''}" onclick="setAttendance('${storageId}', 'dihoc')">✓ Đi học</button>
+                <button type="button" class="btn-status btn-absent ${isAbsent ? 'active-absent' : ''}" onclick="setAttendance('${storageId}', 'vang')">✗ Vắng</button>
+            </div>
+
             <div class="card-row">
                 ${buttonHTML}
             </div>
             <div class="card-row">
-                <select class="select-box select-note" onchange="checkNote(this); saveData('${storageId}', 'note', this.value)">
+                <select class="select-box select-note" onchange="saveData('${storageId}', 'note', this.value); updateSummaryTable();">
                     ${noteOptions.map(opt => `<option value="${opt.value}" ${opt.value === saved.note ? 'selected' : ''}>${opt.text}</option>`).join('')}
                 </select>
             </div>
@@ -186,8 +312,7 @@ function renderStudents() {
         card.innerHTML = cardHTML;
         listContainer.appendChild(card);
 
-        const noteSelect = card.querySelector('.select-note');
-        if (noteSelect && noteSelect.value === 'nghi') {
+        if (isAbsent) {
             card.classList.add('highlight-red');
         }
 
@@ -195,41 +320,151 @@ function renderStudents() {
     });
 }
 
+function setAttendance(storageId, status) {
+    const card = document.querySelector(`.student-card[data-id="${storageId}"]`);
+    const btnPresent = card.querySelector('.btn-present');
+    const btnAbsent = card.querySelector('.btn-absent');
+
+    let localData = JSON.parse(localStorage.getItem('studentApp_data')) || {};
+    if (!localData[storageId]) localData[storageId] = { status: "dihoc", note: "" };
+
+    localData[storageId].status = status;
+
+    if (status === 'vang') {
+        card.classList.add('highlight-red');
+        btnPresent.classList.remove('active-present');
+        btnAbsent.classList.add('active-absent');
+    } else {
+        card.classList.remove('highlight-red');
+        btnPresent.classList.add('active-present');
+        btnAbsent.classList.remove('active-absent');
+    }
+
+    localStorage.setItem('studentApp_data', JSON.stringify(localData));
+    updateSummaryTable();
+}
+
 function saveData(storageId, field, value) {
     let localData = JSON.parse(localStorage.getItem('studentApp_data')) || {};
-    if (!localData[storageId]) {
-        localData[storageId] = { class: "", note: "" };
-    }
+    if (!localData[storageId]) localData[storageId] = { status: "dihoc", note: "" };
     localData[storageId][field] = value;
     localStorage.setItem('studentApp_data', JSON.stringify(localData));
 }
 
-function checkNote(selectElement) {
-    var card = selectElement.closest('.student-card');
-    if (selectElement.value === 'nghi') {
-        card.classList.add('highlight-red');
+function updateSummaryTable() {
+    const selectedClass = document.getElementById('classFilter').value;
+    const summaryArea = document.getElementById('summaryArea');
+    
+    if (selectedClass === "") {
+        summaryArea.style.display = "none";
+        return;
+    }
+
+    summaryArea.style.display = "block";
+    document.getElementById('summaryClassName').innerText = `Thống kê lớp: ${selectedClass}`;
+
+    let localData = JSON.parse(localStorage.getItem('studentApp_data')) || {};
+    const studentsInClass = dataHocSinh.filter(s => s.lop === selectedClass);
+    
+    let total = studentsInClass.length;
+    let absentCount = 0;
+    let presentCount = 0;
+    let absentListHTML = "";
+
+    studentsInClass.forEach(student => {
+        const saved = localData[student.id] || { status: "dihoc", note: "" };
+        if (saved.status === "vang") {
+            absentCount++;
+            let noteText = saved.note ? saved.note : "Không ghi chú";
+            
+            absentListHTML += `
+                <div class="absent-item">
+                    <span class="absent-name">${student.ten}</span>
+                    <span class="absent-note">${noteText}</span>
+                </div>
+            `;
+        } else {
+            presentCount++;
+        }
+    });
+
+    document.getElementById('txtTotal').innerText = `Sĩ số: ${total}`;
+    document.getElementById('txtPresent').innerText = `Đi học: ${presentCount}`;
+    document.getElementById('txtAbsent').innerText = `Vắng: ${absentCount}`;
+
+    const namesContainer = document.getElementById('absentNamesContainer');
+    if (absentCount === 0) {
+        namesContainer.innerHTML = `<span class="no-absent">Lớp đi học đầy đủ, không có học sinh vắng.</span>`;
     } else {
-        card.classList.remove('highlight-red');
+        namesContainer.innerHTML = absentListHTML;
     }
 }
 
+// Hàm thực hiện chức năng Copy nội dung danh sách vắng
+function copyAbsentList() {
+    const selectedClass = document.getElementById('classFilter').value;
+    if (!selectedClass) return;
+
+    let localData = JSON.parse(localStorage.getItem('studentApp_data')) || {};
+    const studentsInClass = dataHocSinh.filter(s => s.lop === selectedClass);
+
+    let textToCopy = `DANH SÁCH VẮNG HỌC - LỚP ${selectedClass.toUpperCase()}\n`;
+    let count = 1;
+    let hasAbsent = false;
+
+    studentsInClass.forEach(student => {
+        const saved = localData[student.id] || { status: "dihoc", note: "" };
+        if (saved.status === "vang") {
+            hasAbsent = true;
+            let noteText = saved.note ? `(${saved.note})` : "(Không ghi chú)";
+            textToCopy += `${count}. ${student.ten} ${noteText}\n`;
+            count++;
+        }
+    });
+
+    if (!hasAbsent) {
+        textToCopy += `Hôm nay lớp đi học đầy đủ, không có học sinh vắng.`;
+    }
+
+    // Tiến hành copy vào clipboard
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        const btnCopy = document.getElementById('btnCopy');
+        const oldText = btnCopy.innerText;
+        btnCopy.innerText = "✓ Đã copy thành công!";
+        btnCopy.style.backgroundColor = "#22c55e";
+        
+        // Trả lại trạng thái nút ban đầu sau 2 giây
+        setTimeout(() => {
+            btnCopy.innerText = oldText;
+            btnCopy.style.backgroundColor = "#4f46e5";
+        }, 2000);
+    }).catch(err => {
+        alert("Lỗi không thể copy: ", err);
+    });
+}
+
 function filterStudents() {
+    const selectedClass = document.getElementById('classFilter').value;
     const nameKeyword = document.getElementById('nameSearch').value.toLowerCase().trim();
     const phoneKeyword = document.getElementById('phoneSearch').value.trim();
     const cards = document.querySelectorAll('.student-card');
 
-    if (nameKeyword === "" && phoneKeyword === "") {
+    updateSummaryTable();
+
+    if (selectedClass === "" && nameKeyword === "" && phoneKeyword === "") {
         cards.forEach(card => card.style.display = "none");
         return;
     }
 
     cards.forEach(card => {
+        const studentClass = card.getAttribute('data-lop');
         const nameElement = card.querySelector('.student-name');
         const phoneAnchor = card.querySelector('.btn-call[data-phone]');
         
+        let isClassMatch = (selectedClass === "") || (studentClass === selectedClass);
         let isNameMatch = nameElement ? nameElement.getAttribute('data-name').toLowerCase().includes(nameKeyword) : true;
-        let isPhoneMatch = true;
         
+        let isPhoneMatch = true;
         if (phoneKeyword !== "") {
             if (phoneAnchor) {
                 isPhoneMatch = phoneAnchor.getAttribute('data-phone').includes(phoneKeyword);
@@ -238,7 +473,11 @@ function filterStudents() {
             }
         }
 
-        card.style.display = (isNameMatch && isPhoneMatch) ? "block" : "none";
+        if (isClassMatch && isNameMatch && isPhoneMatch) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
     });
 }
 
